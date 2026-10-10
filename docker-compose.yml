@@ -1,0 +1,42 @@
+services:
+  mysql:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: voice_agent
+      MYSQL_USER: voice
+      MYSQL_PASSWORD: voicepass
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports: ["3306:3306"]
+    volumes: [mysql_data:/var/lib/mysql]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 5s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+  qdrant:
+    image: qdrant/qdrant:latest
+    ports: ["6333:6333"]
+    volumes: [qdrant_data:/qdrant/storage]
+  # Full stack: docker compose --profile app up --build   (requires prisma/migrations; see README "First run")
+  api:
+    build: .
+    profiles: ["app"]
+    env_file: .env
+    environment: &appenv
+      DATABASE_URL: mysql://voice:voicepass@mysql:3306/voice_agent
+      REDIS_URL: redis://redis:6379
+      QDRANT_URL: http://qdrant:6333
+    ports: ["3000:3000"]
+    depends_on: { mysql: { condition: service_healthy }, redis: { condition: service_started } }
+  worker:
+    build: .
+    profiles: ["app"]
+    command: ["node", "src/workers/index.js"]
+    env_file: .env
+    environment: *appenv
+    depends_on: { mysql: { condition: service_healthy }, redis: { condition: service_started } }
+volumes:
+  mysql_data:
+  qdrant_data:

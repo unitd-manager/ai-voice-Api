@@ -1,0 +1,36 @@
+name: CI
+on: { push: { branches: [main] }, pull_request: {} }
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env: { MYSQL_DATABASE: voice_agent, MYSQL_USER: voice, MYSQL_PASSWORD: voicepass, MYSQL_ROOT_PASSWORD: rootpass }
+        ports: ['3306:3306']
+        options: --health-cmd="mysqladmin ping -prootpass" --health-interval=5s --health-retries=20
+    env:
+      DATABASE_URL: mysql://voice:voicepass@127.0.0.1:3306/voice_agent
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run lint:syntax
+      - run: npx prisma validate
+      - run: npx prisma generate
+      - name: Apply schema (migrations if committed, else db push)
+        run: |
+          if [ -d prisma/migrations ] && [ -n "$(ls -A prisma/migrations 2>/dev/null)" ]; then npx prisma migrate deploy; else npx prisma db push --skip-generate; fi
+      - run: npm run check:prisma
+      - run: npm test                      # mocked unit + integration (incl. OpenAPI drift check)
+      - run: npm run db:test-client        # Rust-free client used by DB tests
+      - run: npm run test:db               # real MySQL: tenancy, concurrency, billing
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true            # advisory; review findings
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t voice-agent-saas:${{ github.sha }} .

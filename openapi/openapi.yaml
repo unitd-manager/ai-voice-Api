@@ -1,0 +1,3272 @@
+openapi: 3.0.3
+info:
+  title: Voice Agent SaaS API
+  version: 0.2.0
+  description: "Generated from the live route table and Zod validators. Success: `{success:true,data,meta}`. Error: `{success:false,error:{code,message},requestId}`. Tenant routes live under /orgs/{orgId}; access is decided server-side from membership (users) or the bound organization (API keys). POST endpoints that move money or start calls accept an `Idempotency-Key` header."
+servers:
+  - url: /api/v1
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    apiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+        requestId:
+          type: string
+  responses:
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+paths:
+  /admin/billing/reconcile:
+    post:
+      tags:
+        - admin
+      summary: POST /admin/billing/reconcile
+      operationId: post__admin_billing_reconcile
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /admin/orgs:
+    get:
+      tags:
+        - admin
+      summary: GET /admin/orgs
+      operationId: get__admin_orgs
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            default: 25
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 100
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /admin/orgs/{id}:
+    get:
+      tags:
+        - admin
+      summary: GET /admin/orgs/{id}
+      operationId: get__admin_orgs_id
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /admin/orgs/{id}/credits:
+    post:
+      tags:
+        - admin
+      summary: POST /admin/orgs/{id}/credits
+      operationId: post__admin_orgs_id_credits
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amountMinor:
+                  type: integer
+                  minimum: 1
+                  maximum: 10000000
+                reason:
+                  type: string
+                  minLength: 3
+                  maxLength: 200
+                idempotencyKey:
+                  type: string
+                  minLength: 8
+                  maxLength: 100
+              required:
+                - amountMinor
+                - reason
+                - idempotencyKey
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /admin/orgs/{id}/suspend:
+    post:
+      tags:
+        - admin
+      summary: POST /admin/orgs/{id}/suspend
+      operationId: post__admin_orgs_id_suspend
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /admin/orgs/{id}/unsuspend:
+    post:
+      tags:
+        - admin
+      summary: POST /admin/orgs/{id}/unsuspend
+      operationId: post__admin_orgs_id_unsuspend
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /admin/system/health:
+    get:
+      tags:
+        - admin
+      summary: GET /admin/system/health
+      operationId: get__admin_system_health
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /admin/webhook-events:
+    get:
+      tags:
+        - admin
+      summary: GET /admin/webhook-events
+      operationId: get__admin_webhook_events
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            default: 25
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+        - name: unprocessed
+          in: query
+          required: false
+          schema:
+            default: "true"
+            type: string
+            enum:
+              - "true"
+              - "false"
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /admin/webhook-events/{id}/retry:
+    post:
+      tags:
+        - admin
+      summary: POST /admin/webhook-events/{id}/retry
+      operationId: post__admin_webhook_events_id_retry
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /auth/forgot-password:
+    post:
+      tags:
+        - auth
+      summary: POST /auth/forgot-password
+      operationId: post__auth_forgot_password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+              required:
+                - email
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+  /auth/login:
+    post:
+      tags:
+        - auth
+      summary: POST /auth/login
+      operationId: post__auth_login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                password:
+                  type: string
+                  minLength: 1
+                  maxLength: 128
+              required:
+                - email
+                - password
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+  /auth/logout:
+    post:
+      tags:
+        - auth
+      summary: POST /auth/logout
+      operationId: post__auth_logout
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  minLength: 20
+                  maxLength: 200
+              required:
+                - refreshToken
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+  /auth/refresh:
+    post:
+      tags:
+        - auth
+      summary: POST /auth/refresh
+      operationId: post__auth_refresh
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  minLength: 20
+                  maxLength: 200
+              required:
+                - refreshToken
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+  /auth/register:
+    post:
+      tags:
+        - auth
+      summary: POST /auth/register
+      operationId: post__auth_register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  maxLength: 254
+                  format: email
+                  pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                password:
+                  type: string
+                  minLength: 10
+                  maxLength: 128
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                organizationName:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+              required:
+                - email
+                - password
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+  /auth/reset-password:
+    post:
+      tags:
+        - auth
+      summary: POST /auth/reset-password
+      operationId: post__auth_reset_password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  minLength: 20
+                  maxLength: 200
+                password:
+                  type: string
+                  minLength: 10
+                  maxLength: 128
+              required:
+                - token
+                - password
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+  /auth/verify-email:
+    post:
+      tags:
+        - auth
+      summary: POST /auth/verify-email
+      operationId: post__auth_verify_email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  minLength: 20
+                  maxLength: 200
+              required:
+                - token
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+  /orgs:
+    get:
+      tags:
+        - orgs
+      summary: GET /orgs
+      operationId: get__orgs
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}:
+    get:
+      tags:
+        - misc
+      summary: GET /orgs/{orgId}
+      operationId: get__orgs_orgId
+      description: Requires permission `org:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags:
+        - misc
+      summary: PATCH /orgs/{orgId}
+      operationId: patch__orgs_orgId
+      description: Requires permission `org:update` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 2
+                  maxLength: 100
+                retentionDays:
+                  type: integer
+                  minimum: 1
+                  maximum: 3650
+                settings:
+                  type: object
+                  propertyNames:
+                    type: string
+                  additionalProperties: {}
+              additionalProperties: false
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/agents:
+    get:
+      tags:
+        - agents
+      summary: GET /orgs/{orgId}/agents
+      operationId: get__orgs_orgId_agents
+      description: Requires permission `agents:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            default: 25
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - DRAFT
+              - PUBLISHED
+              - ARCHIVED
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - agents
+      summary: POST /orgs/{orgId}/agents
+      operationId: post__orgs_orgId_agents
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                config:
+                  type: object
+                  properties:
+                    systemPrompt:
+                      type: string
+                      minLength: 1
+                      maxLength: 20000
+                    greeting:
+                      type: string
+                      maxLength: 1000
+                    language:
+                      default: en
+                      type: string
+                      minLength: 2
+                      maxLength: 10
+                    voice:
+                      type: object
+                      properties:
+                        provider:
+                          default: 11labs
+                          type: string
+                          maxLength: 40
+                        voiceId:
+                          type: string
+                          maxLength: 100
+                      required:
+                        - voiceId
+                    model:
+                      default: {}
+                      type: object
+                      properties:
+                        name:
+                          default: gpt-4o-mini
+                          type: string
+                          maxLength: 100
+                        temperature:
+                          default: 0.3
+                          type: number
+                          minimum: 0
+                          maximum: 2
+                        maxTokens:
+                          default: 500
+                          type: integer
+                          minimum: 50
+                          maximum: 4000
+                    interruptionSensitivity:
+                      default: 0.5
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                    silenceTimeoutSeconds:
+                      default: 20
+                      type: integer
+                      minimum: 5
+                      maximum: 120
+                    maxCallDurationSeconds:
+                      default: 900
+                      type: integer
+                      minimum: 30
+                      maximum: 7200
+                    transferRules:
+                      default: []
+                      maxItems: 10
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          phoneNumber:
+                            type: string
+                            pattern: ^\+[1-9]\d{6,14}$
+                          condition:
+                            type: string
+                            maxLength: 300
+                        required:
+                          - phoneNumber
+                          - condition
+                    extraction:
+                      default: []
+                      maxItems: 20
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^[a-z_][a-z0-9_]{0,40}$
+                          description:
+                            type: string
+                            maxLength: 300
+                          type:
+                            type: string
+                            enum:
+                              - string
+                              - number
+                              - boolean
+                        required:
+                          - name
+                          - description
+                          - type
+                    retentionDays:
+                      type: integer
+                      minimum: 1
+                      maximum: 3650
+                  required:
+                    - systemPrompt
+                  additionalProperties: false
+                knowledgeBaseIds:
+                  default: []
+                  maxItems: 20
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 40
+                toolIds:
+                  default: []
+                  maxItems: 30
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 40
+              required:
+                - name
+                - config
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/agents/{agentId}:
+    get:
+      tags:
+        - agents
+      summary: GET /orgs/{orgId}/agents/{agentId}
+      operationId: get__orgs_orgId_agents_agentId
+      description: Requires permission `agents:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags:
+        - agents
+      summary: PATCH /orgs/{orgId}/agents/{agentId}
+      operationId: patch__orgs_orgId_agents_agentId
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                config:
+                  type: object
+                  properties:
+                    systemPrompt:
+                      type: string
+                      minLength: 1
+                      maxLength: 20000
+                    greeting:
+                      type: string
+                      maxLength: 1000
+                    language:
+                      default: en
+                      type: string
+                      minLength: 2
+                      maxLength: 10
+                    voice:
+                      type: object
+                      properties:
+                        provider:
+                          default: 11labs
+                          type: string
+                          maxLength: 40
+                        voiceId:
+                          type: string
+                          maxLength: 100
+                      required:
+                        - voiceId
+                    model:
+                      default: {}
+                      type: object
+                      properties:
+                        name:
+                          default: gpt-4o-mini
+                          type: string
+                          maxLength: 100
+                        temperature:
+                          default: 0.3
+                          type: number
+                          minimum: 0
+                          maximum: 2
+                        maxTokens:
+                          default: 500
+                          type: integer
+                          minimum: 50
+                          maximum: 4000
+                    interruptionSensitivity:
+                      default: 0.5
+                      type: number
+                      minimum: 0
+                      maximum: 1
+                    silenceTimeoutSeconds:
+                      default: 20
+                      type: integer
+                      minimum: 5
+                      maximum: 120
+                    maxCallDurationSeconds:
+                      default: 900
+                      type: integer
+                      minimum: 30
+                      maximum: 7200
+                    transferRules:
+                      default: []
+                      maxItems: 10
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          phoneNumber:
+                            type: string
+                            pattern: ^\+[1-9]\d{6,14}$
+                          condition:
+                            type: string
+                            maxLength: 300
+                        required:
+                          - phoneNumber
+                          - condition
+                    extraction:
+                      default: []
+                      maxItems: 20
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            pattern: ^[a-z_][a-z0-9_]{0,40}$
+                          description:
+                            type: string
+                            maxLength: 300
+                          type:
+                            type: string
+                            enum:
+                              - string
+                              - number
+                              - boolean
+                        required:
+                          - name
+                          - description
+                          - type
+                    retentionDays:
+                      type: integer
+                      minimum: 1
+                      maximum: 3650
+                  required:
+                    - systemPrompt
+                  additionalProperties: false
+                note:
+                  type: string
+                  maxLength: 200
+                knowledgeBaseIds:
+                  maxItems: 20
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 40
+                toolIds:
+                  maxItems: 30
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 40
+              additionalProperties: false
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    delete:
+      tags:
+        - agents
+      summary: DELETE /orgs/{orgId}/agents/{agentId}
+      operationId: delete__orgs_orgId_agents_agentId
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/agents/{agentId}/archive:
+    post:
+      tags:
+        - agents
+      summary: POST /orgs/{orgId}/agents/{agentId}/archive
+      operationId: post__orgs_orgId_agents_agentId_archive
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/agents/{agentId}/chat:
+    post:
+      tags:
+        - agents
+      summary: POST /orgs/{orgId}/agents/{agentId}/chat
+      operationId: post__orgs_orgId_agents_agentId_chat
+      description: Requires permission `calls:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                messages:
+                  minItems: 1
+                  maxItems: 40
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      role:
+                        type: string
+                        enum:
+                          - user
+                          - assistant
+                      content:
+                        type: string
+                        minLength: 1
+                        maxLength: 4000
+                    required:
+                      - role
+                      - content
+                contact:
+                  type: string
+                  maxLength: 40
+              required:
+                - messages
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/agents/{agentId}/duplicate:
+    post:
+      tags:
+        - agents
+      summary: POST /orgs/{orgId}/agents/{agentId}/duplicate
+      operationId: post__orgs_orgId_agents_agentId_duplicate
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/agents/{agentId}/memory:
+    delete:
+      tags:
+        - agents
+      summary: DELETE /orgs/{orgId}/agents/{agentId}/memory
+      operationId: delete__orgs_orgId_agents_agentId_memory
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contact:
+                  type: string
+                  minLength: 5
+                  maxLength: 40
+              required:
+                - contact
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/agents/{agentId}/publish:
+    post:
+      tags:
+        - agents
+      summary: POST /orgs/{orgId}/agents/{agentId}/publish
+      operationId: post__orgs_orgId_agents_agentId_publish
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/agents/{agentId}/rollback:
+    post:
+      tags:
+        - agents
+      summary: POST /orgs/{orgId}/agents/{agentId}/rollback
+      operationId: post__orgs_orgId_agents_agentId_rollback
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                version:
+                  type: integer
+                  exclusiveMinimum: 0
+                  maximum: 9007199254740991
+              required:
+                - version
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/agents/{agentId}/versions:
+    get:
+      tags:
+        - agents
+      summary: GET /orgs/{orgId}/agents/{agentId}/versions
+      operationId: get__orgs_orgId_agents_agentId_versions
+      description: Requires permission `agents:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: agentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/analytics/overview:
+    get:
+      tags:
+        - analytics
+      summary: GET /orgs/{orgId}/analytics/overview
+      operationId: get__orgs_orgId_analytics_overview
+      description: Requires permission `analytics:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: days
+          in: query
+          required: false
+          schema:
+            default: 30
+            type: integer
+            minimum: 1
+            maximum: 90
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/api-keys:
+    get:
+      tags:
+        - api-keys
+      summary: GET /orgs/{orgId}/api-keys
+      operationId: get__orgs_orgId_api_keys
+      description: Requires permission `apikeys:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - api-keys
+      summary: POST /orgs/{orgId}/api-keys
+      operationId: post__orgs_orgId_api_keys
+      description: Requires permission `apikeys:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 80
+                role:
+                  default: DEVELOPER
+                  type: string
+                  enum:
+                    - ADMIN
+                    - DEVELOPER
+                    - ANALYST
+                    - VIEWER
+              required:
+                - name
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/api-keys/{keyId}:
+    delete:
+      tags:
+        - api-keys
+      summary: DELETE /orgs/{orgId}/api-keys/{keyId}
+      operationId: delete__orgs_orgId_api_keys_keyId
+      description: Requires permission `apikeys:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: keyId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/audit-logs:
+    get:
+      tags:
+        - audit-logs
+      summary: GET /orgs/{orgId}/audit-logs
+      operationId: get__orgs_orgId_audit_logs
+      description: Requires permission `audit:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            default: 25
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/billing:
+    get:
+      tags:
+        - billing
+      summary: GET /orgs/{orgId}/billing
+      operationId: get__orgs_orgId_billing
+      description: Requires permission `billing:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/billing/checkout:
+    post:
+      tags:
+        - billing
+      summary: POST /orgs/{orgId}/billing/checkout
+      operationId: post__orgs_orgId_billing_checkout
+      description: Requires permission `billing:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                planCode:
+                  type: string
+                  maxLength: 40
+                interval:
+                  type: string
+                  enum:
+                    - MONTH
+                    - YEAR
+              required:
+                - planCode
+                - interval
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/billing/invoices:
+    get:
+      tags:
+        - billing
+      summary: GET /orgs/{orgId}/billing/invoices
+      operationId: get__orgs_orgId_billing_invoices
+      description: Requires permission `billing:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/billing/portal:
+    post:
+      tags:
+        - billing
+      summary: POST /orgs/{orgId}/billing/portal
+      operationId: post__orgs_orgId_billing_portal
+      description: Requires permission `billing:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/calls:
+    get:
+      tags:
+        - calls
+      summary: GET /orgs/{orgId}/calls
+      operationId: get__orgs_orgId_calls
+      description: Requires permission `calls:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            default: 25
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - QUEUED
+              - RINGING
+              - IN_PROGRESS
+              - COMPLETED
+              - FAILED
+              - NO_ANSWER
+              - BUSY
+              - CANCELED
+        - name: agentId
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/calls/{callId}:
+    get:
+      tags:
+        - calls
+      summary: GET /orgs/{orgId}/calls/{callId}
+      operationId: get__orgs_orgId_calls_callId
+      description: Requires permission `calls:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: callId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/calls/{callId}/terminate:
+    post:
+      tags:
+        - calls
+      summary: POST /orgs/{orgId}/calls/{callId}/terminate
+      operationId: post__orgs_orgId_calls_callId_terminate
+      description: Requires permission `calls:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: callId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/calls/outbound:
+    post:
+      tags:
+        - calls
+      summary: POST /orgs/{orgId}/calls/outbound
+      operationId: post__orgs_orgId_calls_outbound
+      description: Requires permission `calls:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agentId:
+                  type: string
+                  maxLength: 40
+                phoneNumberId:
+                  type: string
+                  maxLength: 40
+                toNumber:
+                  type: string
+                  pattern: ^\+[1-9]\d{6,14}$
+              required:
+                - agentId
+                - phoneNumberId
+                - toNumber
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/credits:
+    get:
+      tags:
+        - credits
+      summary: GET /orgs/{orgId}/credits
+      operationId: get__orgs_orgId_credits
+      description: Requires permission `billing:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/credits/checkout:
+    post:
+      tags:
+        - credits
+      summary: POST /orgs/{orgId}/credits/checkout
+      operationId: post__orgs_orgId_credits_checkout
+      description: Requires permission `billing:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amountMinor:
+                  type: integer
+                  minimum: -9007199254740991
+                  maximum: 9007199254740991
+              required:
+                - amountMinor
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/credits/transactions:
+    get:
+      tags:
+        - credits
+      summary: GET /orgs/{orgId}/credits/transactions
+      operationId: get__orgs_orgId_credits_transactions
+      description: Requires permission `billing:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/integrations:
+    get:
+      tags:
+        - integrations
+      summary: GET /orgs/{orgId}/integrations
+      operationId: get__orgs_orgId_integrations
+      description: Requires permission `integrations:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/integrations/{provider}:
+    put:
+      tags:
+        - integrations
+      summary: PUT /orgs/{orgId}/integrations/{provider}
+      operationId: put__orgs_orgId_integrations_provider
+      description: Requires permission `integrations:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                config:
+                  type: object
+                  propertyNames:
+                    type: string
+                  additionalProperties: {}
+                enabled:
+                  default: true
+                  type: boolean
+              required:
+                - config
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    delete:
+      tags:
+        - integrations
+      summary: DELETE /orgs/{orgId}/integrations/{provider}
+      operationId: delete__orgs_orgId_integrations_provider
+      description: Requires permission `integrations:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/integrations/{provider}/test:
+    post:
+      tags:
+        - integrations
+      summary: POST /orgs/{orgId}/integrations/{provider}/test
+      operationId: post__orgs_orgId_integrations_provider_test
+      description: Requires permission `integrations:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: provider
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/invitations:
+    post:
+      tags:
+        - invitations
+      summary: POST /orgs/{orgId}/invitations
+      operationId: post__orgs_orgId_invitations
+      description: Requires permission `members:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  pattern: ^(?:[A-Za-z0-9_'+\-]+\.)*[A-Za-z0-9_'+\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\-]*\.)+[A-Za-z]{2,}$
+                role:
+                  default: VIEWER
+                  type: string
+                  enum:
+                    - OWNER
+                    - ADMIN
+                    - DEVELOPER
+                    - ANALYST
+                    - VIEWER
+              required:
+                - email
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/knowledge-bases:
+    get:
+      tags:
+        - knowledge-bases
+      summary: GET /orgs/{orgId}/knowledge-bases
+      operationId: get__orgs_orgId_knowledge_bases
+      description: Requires permission `kb:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - knowledge-bases
+      summary: POST /orgs/{orgId}/knowledge-bases
+      operationId: post__orgs_orgId_knowledge_bases
+      description: Requires permission `kb:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+                description:
+                  type: string
+                  maxLength: 500
+              required:
+                - name
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/knowledge-bases/{kbId}/documents:
+    get:
+      tags:
+        - knowledge-bases
+      summary: GET /orgs/{orgId}/knowledge-bases/{kbId}/documents
+      operationId: get__orgs_orgId_knowledge_bases_kbId_documents
+      description: Requires permission `kb:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - knowledge-bases
+      summary: POST /orgs/{orgId}/knowledge-bases/{kbId}/documents
+      operationId: post__orgs_orgId_knowledge_bases_kbId_documents
+      description: Requires permission `kb:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+              required:
+                - file
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/knowledge-bases/{kbId}/documents/{docId}:
+    delete:
+      tags:
+        - knowledge-bases
+      summary: DELETE /orgs/{orgId}/knowledge-bases/{kbId}/documents/{docId}
+      operationId: delete__orgs_orgId_knowledge_bases_kbId_documents_docId
+      description: Requires permission `kb:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: docId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/knowledge-bases/{kbId}/documents/{docId}/reprocess:
+    post:
+      tags:
+        - knowledge-bases
+      summary: POST /orgs/{orgId}/knowledge-bases/{kbId}/documents/{docId}/reprocess
+      operationId: post__orgs_orgId_knowledge_bases_kbId_documents_docId_reprocess
+      description: Requires permission `kb:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: docId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/knowledge-bases/{kbId}/evaluate:
+    post:
+      tags:
+        - knowledge-bases
+      summary: POST /orgs/{orgId}/knowledge-bases/{kbId}/evaluate
+      operationId: post__orgs_orgId_knowledge_bases_kbId_evaluate
+      description: Requires permission `kb:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agentId:
+                  type: string
+                  maxLength: 40
+                topK:
+                  default: 4
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                cases:
+                  minItems: 1
+                  maxItems: 50
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      query:
+                        type: string
+                        minLength: 1
+                        maxLength: 500
+                      expectedDocumentId:
+                        type: string
+                        maxLength: 40
+                    required:
+                      - query
+                      - expectedDocumentId
+              required:
+                - agentId
+                - cases
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/knowledge-bases/{kbId}/search-test:
+    post:
+      tags:
+        - knowledge-bases
+      summary: POST /orgs/{orgId}/knowledge-bases/{kbId}/search-test
+      operationId: post__orgs_orgId_knowledge_bases_kbId_search_test
+      description: Requires permission `kb:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: kbId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agentId:
+                  type: string
+                  maxLength: 40
+                query:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+              required:
+                - agentId
+                - query
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/members:
+    get:
+      tags:
+        - members
+      summary: GET /orgs/{orgId}/members
+      operationId: get__orgs_orgId_members
+      description: Requires permission `org:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/members/{userId}:
+    patch:
+      tags:
+        - members
+      summary: PATCH /orgs/{orgId}/members/{userId}
+      operationId: patch__orgs_orgId_members_userId
+      description: Requires permission `members:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum:
+                    - OWNER
+                    - ADMIN
+                    - DEVELOPER
+                    - ANALYST
+                    - VIEWER
+              required:
+                - role
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    delete:
+      tags:
+        - members
+      summary: DELETE /orgs/{orgId}/members/{userId}
+      operationId: delete__orgs_orgId_members_userId
+      description: Requires permission `members:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/notifications:
+    get:
+      tags:
+        - notifications
+      summary: GET /orgs/{orgId}/notifications
+      operationId: get__orgs_orgId_notifications
+      description: Requires permission `org:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          required: false
+          schema:
+            default: 25
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 40
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/notifications/{id}/read:
+    post:
+      tags:
+        - notifications
+      summary: POST /orgs/{orgId}/notifications/{id}/read
+      operationId: post__orgs_orgId_notifications_id_read
+      description: Requires permission `org:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/phone-numbers:
+    get:
+      tags:
+        - phone-numbers
+      summary: GET /orgs/{orgId}/phone-numbers
+      operationId: get__orgs_orgId_phone_numbers
+      description: Requires permission `agents:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - phone-numbers
+      summary: POST /orgs/{orgId}/phone-numbers
+      operationId: post__orgs_orgId_phone_numbers
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    provider:
+                      type: string
+                      const: vapi
+                    areaCode:
+                      type: string
+                      pattern: ^\d{3}$
+                    monthlyCostMinor:
+                      default: 0
+                      type: integer
+                      minimum: 0
+                      maximum: 100000
+                  required:
+                    - provider
+                    - areaCode
+                - type: object
+                  properties:
+                    provider:
+                      type: string
+                      const: twilio
+                    number:
+                      type: string
+                      pattern: ^\+[1-9]\d{6,14}$
+                    twilioAccountSid:
+                      type: string
+                      pattern: ^AC[0-9a-f]{32}$
+                    twilioAuthToken:
+                      type: string
+                      minLength: 16
+                      maxLength: 64
+                    monthlyCostMinor:
+                      default: 0
+                      type: integer
+                      minimum: 0
+                      maximum: 100000
+                  required:
+                    - provider
+                    - number
+                    - twilioAccountSid
+                    - twilioAuthToken
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/phone-numbers/{id}:
+    patch:
+      tags:
+        - phone-numbers
+      summary: PATCH /orgs/{orgId}/phone-numbers/{id}
+      operationId: patch__orgs_orgId_phone_numbers_id
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agentId:
+                  anyOf:
+                    - type: string
+                      maxLength: 40
+                    - type: "null"
+              required:
+                - agentId
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    delete:
+      tags:
+        - phone-numbers
+      summary: DELETE /orgs/{orgId}/phone-numbers/{id}
+      operationId: delete__orgs_orgId_phone_numbers_id
+      description: Requires permission `agents:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/recordings/{callId}:
+    get:
+      tags:
+        - recordings
+      summary: GET /orgs/{orgId}/recordings/{callId}
+      operationId: get__orgs_orgId_recordings_callId
+      description: Requires permission `recordings:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: callId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/tools:
+    get:
+      tags:
+        - tools
+      summary: GET /orgs/{orgId}/tools
+      operationId: get__orgs_orgId_tools
+      description: Requires permission `tools:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - tools
+      summary: POST /orgs/{orgId}/tools
+      operationId: post__orgs_orgId_tools
+      description: Requires permission `tools:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  pattern: ^[a-z][a-z0-9_]{1,40}$
+                kind:
+                  type: string
+                  enum:
+                    - customer_lookup
+                    - order_lookup
+                    - appointment_availability
+                    - appointment_book
+                    - lead_create
+                    - ticket_create
+                description:
+                  type: string
+                  minLength: 1
+                  maxLength: 500
+                config:
+                  type: object
+                  properties:
+                    url:
+                      type: string
+                      maxLength: 500
+                      format: uri
+                    headers:
+                      type: object
+                      propertyNames:
+                        type: string
+                      additionalProperties:
+                        type: string
+                        maxLength: 500
+                    allowedHosts:
+                      maxItems: 10
+                      type: array
+                      items:
+                        type: string
+                        maxLength: 253
+                  required:
+                    - url
+                  additionalProperties: false
+                enabled:
+                  default: true
+                  type: boolean
+              required:
+                - name
+                - kind
+                - description
+                - config
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/tools/{toolId}:
+    delete:
+      tags:
+        - tools
+      summary: DELETE /orgs/{orgId}/tools/{toolId}
+      operationId: delete__orgs_orgId_tools_toolId
+      description: Requires permission `tools:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: toolId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/tools/execute:
+    post:
+      tags:
+        - tools
+      summary: POST /orgs/{orgId}/tools/execute
+      operationId: post__orgs_orgId_tools_execute
+      description: Requires permission `calls:write` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                agentId:
+                  type: string
+                  maxLength: 40
+                toolName:
+                  type: string
+                  maxLength: 60
+                args:
+                  type: object
+                  propertyNames:
+                    type: string
+                  additionalProperties: {}
+                callId:
+                  type: string
+                  maxLength: 40
+              required:
+                - agentId
+                - toolName
+                - args
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/usage:
+    get:
+      tags:
+        - usage
+      summary: GET /orgs/{orgId}/usage
+      operationId: get__orgs_orgId_usage
+      description: Requires permission `usage:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/usage/export.csv:
+    get:
+      tags:
+        - usage
+      summary: GET /orgs/{orgId}/usage/export.csv
+      operationId: get__orgs_orgId_usage_export_csv
+      description: Requires permission `usage:read` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/webhook-endpoints:
+    get:
+      tags:
+        - webhook-endpoints
+      summary: GET /orgs/{orgId}/webhook-endpoints
+      operationId: get__orgs_orgId_webhook_endpoints
+      description: Requires permission `webhooks:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+    post:
+      tags:
+        - webhook-endpoints
+      summary: POST /orgs/{orgId}/webhook-endpoints
+      operationId: post__orgs_orgId_webhook_endpoints
+      description: Requires permission `webhooks:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url:
+                  type: string
+                  maxLength: 500
+                  format: uri
+                events:
+                  minItems: 1
+                  maxItems: 10
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - "*"
+                      - call.completed
+                      - call.analyzed
+                      - document.ready
+              required:
+                - url
+                - events
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/{orgId}/webhook-endpoints/{id}:
+    delete:
+      tags:
+        - webhook-endpoints
+      summary: DELETE /orgs/{orgId}/webhook-endpoints/{id}
+      operationId: delete__orgs_orgId_webhook_endpoints_id
+      description: Requires permission `webhooks:manage` in the organization.
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+  /orgs/invitations/accept:
+    post:
+      tags:
+        - orgs
+      summary: POST /orgs/invitations/accept
+      operationId: post__orgs_invitations_accept
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  minLength: 20
+                  maxLength: 200
+              required:
+                - token
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /plans:
+    get:
+      tags:
+        - plans
+      summary: GET /plans
+      operationId: get__plans
+      security: []
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+  /users/me:
+    get:
+      tags:
+        - users
+      summary: GET /users/me
+      operationId: get__users_me
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+    patch:
+      tags:
+        - users
+      summary: PATCH /users/me
+      operationId: patch__users_me
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 100
+              required:
+                - name
+              additionalProperties: false
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /users/me/delete:
+    post:
+      tags:
+        - users
+      summary: POST /users/me/delete
+      operationId: post__users_me_delete
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  maxLength: 128
+              required:
+                - password
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /users/me/export:
+    get:
+      tags:
+        - users
+      summary: GET /users/me/export
+      operationId: get__users_me_export
+      security:
+        - bearerAuth: []
+        - apiKey: []
+      responses:
+        "200":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"
+        "401":
+          $ref: "#/components/responses/Error"
+  /webhooks/vapi:
+    post:
+      tags:
+        - webhooks
+      summary: POST /webhooks/vapi
+      operationId: post__webhooks_vapi
+      security: []
+      responses:
+        "201":
+          description: "Success: { success: true, data, meta }"
+        "400":
+          $ref: "#/components/responses/Error"

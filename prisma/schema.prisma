@@ -1,0 +1,657 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
+  relationMode = "foreignKeys"
+}
+
+// ---------- Enums ----------
+enum Role {
+  OWNER
+  ADMIN
+  DEVELOPER
+  ANALYST
+  VIEWER
+}
+enum AgentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+enum CallDirection {
+  INBOUND
+  OUTBOUND
+}
+enum CallStatus {
+  QUEUED
+  RINGING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  NO_ANSWER
+  BUSY
+  CANCELED
+}
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+enum ToolExecStatus {
+  SUCCESS
+  FAILED
+  TIMEOUT
+  DENIED
+}
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+enum BillingInterval {
+  MONTH
+  YEAR
+}
+enum InvoiceStatus {
+  DRAFT
+  OPEN
+  PAID
+  VOID
+  UNCOLLECTIBLE
+}
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+enum UsageMetric {
+  CALL_MINUTES
+  PROVIDER_COST
+  LLM_TOKENS
+  EMBEDDING_TOKENS
+  STORAGE_BYTES
+  TOOL_EXECUTIONS
+  API_REQUESTS
+  PHONE_NUMBER_COST
+  CONCURRENT_CALLS
+}
+enum ReservationStatus {
+  HELD
+  COMMITTED
+  RELEASED
+  EXPIRED
+}
+enum DeliveryStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
+
+// ---------- Identity & tenancy ----------
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  passwordHash    String
+  name            String?
+  emailVerifiedAt DateTime?
+  disabledAt      DateTime?
+  deletedAt       DateTime?
+  isPlatformAdmin Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  memberships     Membership[]
+  sessions        Session[]
+  authTokens      AuthToken[]
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  settings  Json?
+  retentionDays Int  @default(90)
+  suspendedAt DateTime?
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  memberships Membership[]
+  invitations Invitation[]
+  apiKeys     ApiKey[]
+  agents      Agent[]
+  phoneNumbers PhoneNumber[]
+  calls       Call[]
+  knowledgeBases KnowledgeBase[]
+  toolDefinitions ToolDefinition[]
+  subscriptions Subscription[]
+  billingCustomer BillingCustomer?
+  invoices    Invoice[]
+  payments    Payment[]
+  usageEvents UsageEvent[]
+  usageAggregates UsageAggregate[]
+  usageReservations UsageReservation[]
+  creditAccount CreditAccount?
+  webhookEndpoints WebhookEndpoint[]
+  integrations Integration[]
+  notifications Notification[]
+  auditLogs   AuditLog[]
+  memories    ConversationMemory[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  orgId     String
+  role      Role
+  createdAt DateTime @default(now())
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  org  Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  @@unique([userId, orgId])
+  @@index([orgId, role])
+}
+
+model Invitation {
+  id         String   @id @default(cuid())
+  orgId      String
+  email      String
+  role       Role
+  tokenHash  String   @unique
+  invitedById String
+  expiresAt  DateTime
+  acceptedAt DateTime?
+  createdAt  DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  @@index([orgId, email])
+}
+
+// Refresh-token rotation: each token belongs to a family; reuse of a rotated token revokes the family.
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  familyId    String
+  tokenHash   String   @unique
+  userAgent   String?
+  ip          String?
+  expiresAt   DateTime
+  rotatedAt   DateTime?
+  revokedAt   DateTime?
+  createdAt   DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId])
+  @@index([familyId])
+}
+
+// One-time tokens: email verification and password reset (stored hashed).
+model AuthToken {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String   @db.VarChar(32)
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([userId, type])
+}
+
+model ApiKey {
+  id         String   @id @default(cuid())
+  orgId      String
+  name       String
+  prefix     String   @db.VarChar(16)
+  keyHash    String   @unique
+  role       Role     @default(DEVELOPER)
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  createdById String
+  createdAt  DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  @@index([orgId])
+}
+
+// ---------- AI platform ----------
+model Agent {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  status    AgentStatus @default(DRAFT)
+  currentVersionId String? @unique
+  providerAssistantId String?
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  versions AgentVersion[] @relation("AgentVersions")
+  currentVersion AgentVersion? @relation("CurrentVersion", fields: [currentVersionId], references: [id])
+  phoneNumbers PhoneNumber[]
+  calls Call[]
+  knowledgeBases AgentKnowledgeBase[]
+  tools AgentTool[]
+  @@index([orgId, status])
+}
+
+model AgentVersion {
+  id        String   @id @default(cuid())
+  agentId   String
+  version   Int
+  config    Json
+  note      String?
+  createdById String?
+  createdAt DateTime @default(now())
+  agent Agent @relation("AgentVersions", fields: [agentId], references: [id], onDelete: Cascade)
+  asCurrentFor Agent? @relation("CurrentVersion")
+  @@unique([agentId, version])
+}
+
+model PhoneNumber {
+  id        String   @id @default(cuid())
+  orgId     String
+  agentId   String?
+  e164      String   @unique
+  providerNumberId String?
+  monthlyCostMinor Int @default(0)
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  agent Agent? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  @@index([orgId])
+}
+
+model Call {
+  id        String   @id @default(cuid())
+  orgId     String
+  agentId   String
+  agentVersionId String?
+  direction CallDirection
+  status    CallStatus @default(QUEUED)
+  providerCallId String? @unique
+  fromNumber String?
+  toNumber   String?
+  startedAt  DateTime?
+  endedAt    DateTime?
+  durationSeconds Int?
+  providerCostMinor Int?
+  endReason  String?
+  summary    String? @db.Text
+  analysis   Json?
+  createdAt  DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  agent Agent @relation(fields: [agentId], references: [id])
+  events CallEvent[]
+  transcript TranscriptSegment[]
+  recording Recording?
+  toolExecutions ToolExecution[]
+  @@index([orgId, createdAt])
+  @@index([orgId, status])
+  @@index([agentId])
+}
+
+// Durable event log: provider events are persisted before any queue processing.
+model CallEvent {
+  id        String   @id @default(cuid())
+  callId    String
+  type      String   @db.VarChar(64)
+  payload   Json?
+  createdAt DateTime @default(now())
+  call Call @relation(fields: [callId], references: [id], onDelete: Cascade)
+  @@index([callId, createdAt])
+}
+
+model TranscriptSegment {
+  id        String   @id @default(cuid())
+  callId    String
+  seq       Int
+  speaker   String   @db.VarChar(16)
+  text      String   @db.Text
+  offsetMs  Int?
+  call Call @relation(fields: [callId], references: [id], onDelete: Cascade)
+  @@unique([callId, seq])
+}
+
+model Recording {
+  id        String   @id @default(cuid())
+  callId    String   @unique
+  orgId     String
+  storageKey String
+  contentType String @default("audio/wav")
+  sizeBytes BigInt?
+  deletedAt DateTime?
+  createdAt DateTime @default(now())
+  call Call @relation(fields: [callId], references: [id], onDelete: Cascade)
+  @@index([orgId])
+}
+
+model KnowledgeBase {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  description String?
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  documents KnowledgeDocument[]
+  agents AgentKnowledgeBase[]
+  @@index([orgId])
+}
+
+model KnowledgeDocument {
+  id        String   @id @default(cuid())
+  orgId     String
+  knowledgeBaseId String
+  filename  String
+  mimeType  String
+  sizeBytes Int
+  storageKey String
+  contentHash String?
+  status    DocumentStatus @default(PENDING)
+  error     String?
+  chunkCount Int @default(0)
+  createdAt DateTime @default(now())
+  kb KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  chunks DocumentChunk[]
+  @@index([orgId, knowledgeBaseId])
+}
+
+// Vector metadata lives in MySQL; the vectors themselves live in Qdrant (pointId).
+model DocumentChunk {
+  id         String @id @default(cuid())
+  orgId      String
+  documentId String
+  ordinal    Int
+  text       String @db.Text
+  tokenCount Int?
+  pointId    String @unique
+  document KnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  @@index([orgId, documentId])
+}
+
+model AgentKnowledgeBase {
+  agentId String
+  knowledgeBaseId String
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  kb KnowledgeBase @relation(fields: [knowledgeBaseId], references: [id], onDelete: Cascade)
+  @@id([agentId, knowledgeBaseId])
+}
+
+model ToolDefinition {
+  id        String   @id @default(cuid())
+  orgId     String
+  name      String
+  kind      String   @db.VarChar(64)
+  description String
+  paramsSchema Json
+  config    Json?
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  agents AgentTool[]
+  executions ToolExecution[]
+  @@unique([orgId, name])
+}
+
+model AgentTool {
+  agentId String
+  toolId  String
+  agent Agent @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  tool  ToolDefinition @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  @@id([agentId, toolId])
+}
+
+model ToolExecution {
+  id        String   @id @default(cuid())
+  orgId     String
+  callId    String?
+  toolId    String
+  status    ToolExecStatus
+  args      Json?
+  result    Json?
+  error     String?
+  durationMs Int?
+  createdAt DateTime @default(now())
+  call Call? @relation(fields: [callId], references: [id], onDelete: SetNull)
+  tool ToolDefinition @relation(fields: [toolId], references: [id])
+  @@index([orgId, createdAt])
+}
+
+// ---------- Billing ----------
+model Plan {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  entitlements Json
+  isPublic  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  prices PlanPrice[]
+  subscriptions Subscription[]
+}
+
+model PlanPrice {
+  id        String   @id @default(cuid())
+  planId    String
+  interval  BillingInterval
+  currency  String   @db.VarChar(3)
+  amountMinor Int
+  providerPriceId String?
+  active    Boolean  @default(true)
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  @@unique([planId, interval, currency])
+}
+
+model BillingCustomer {
+  id        String   @id @default(cuid())
+  orgId     String   @unique
+  providerCustomerId String @unique
+  email     String?
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id        String   @id @default(cuid())
+  orgId     String
+  planId    String
+  status    SubscriptionStatus
+  interval  BillingInterval
+  providerSubscriptionId String? @unique
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  trialEndsAt DateTime?
+  cancelAtPeriodEnd Boolean @default(false)
+  graceEndsAt DateTime?
+  canceledAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  plan Plan @relation(fields: [planId], references: [id])
+  @@index([orgId, status])
+}
+
+model Invoice {
+  id        String   @id @default(cuid())
+  orgId     String
+  providerInvoiceId String @unique
+  status    InvoiceStatus
+  currency  String   @db.VarChar(3)
+  totalMinor Int
+  periodStart DateTime?
+  periodEnd   DateTime?
+  hostedUrl String?
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  payments Payment[]
+  @@index([orgId, createdAt])
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  orgId     String
+  invoiceId String?
+  providerPaymentId String @unique
+  status    PaymentStatus
+  currency  String   @db.VarChar(3)
+  amountMinor Int
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  invoice Invoice? @relation(fields: [invoiceId], references: [id], onDelete: SetNull)
+  @@index([orgId])
+}
+
+// Idempotent usage ledger: (orgId, idempotencyKey) prevents double counting.
+model UsageEvent {
+  id        String   @id @default(cuid())
+  orgId     String
+  metric    UsageMetric
+  quantity  BigInt
+  costMinor Int      @default(0)
+  idempotencyKey String @db.VarChar(191)
+  callId    String?
+  occurredAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  @@unique([orgId, idempotencyKey])
+  @@index([orgId, metric, occurredAt])
+}
+
+model UsageAggregate {
+  id        String   @id @default(cuid())
+  orgId     String
+  metric    UsageMetric
+  periodStart DateTime
+  quantity  BigInt   @default(0)
+  costMinor Int      @default(0)
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  @@unique([orgId, metric, periodStart])
+}
+
+model UsageReservation {
+  id        String   @id @default(cuid())
+  orgId     String
+  metric    UsageMetric
+  quantity  BigInt
+  status    ReservationStatus @default(HELD)
+  callId    String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  @@index([orgId, status, expiresAt])
+}
+
+model CreditAccount {
+  id        String   @id @default(cuid())
+  orgId     String   @unique
+  balanceMinor Int   @default(0)
+  currency  String   @db.VarChar(3) @default("USD")
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  transactions CreditTransaction[]
+}
+
+model CreditTransaction {
+  id        String   @id @default(cuid())
+  accountId String
+  deltaMinor Int
+  reason    String
+  idempotencyKey String @unique
+  createdAt DateTime @default(now())
+  account CreditAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  @@index([accountId, createdAt])
+}
+
+// ---------- Platform ----------
+// Inbound provider webhooks, persisted before processing. (source, externalId) dedupes retries.
+model WebhookEvent {
+  id         String   @id @default(cuid())
+  source     String   @db.VarChar(32)
+  externalId String   @db.VarChar(191)
+  type       String   @db.VarChar(96)
+  payload    Json
+  claimedAt  DateTime?
+  processedAt DateTime?
+  error      String?
+  receivedAt DateTime @default(now())
+  @@unique([source, externalId])
+  @@index([processedAt])
+}
+
+model WebhookEndpoint {
+  id        String   @id @default(cuid())
+  orgId     String
+  url       String
+  secret    String   @db.Text
+  events    Json
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+  @@index([orgId])
+}
+
+model WebhookDelivery {
+  id         String   @id @default(cuid())
+  endpointId String
+  eventType  String
+  payload    Json
+  status     DeliveryStatus @default(PENDING)
+  attempts   Int      @default(0)
+  lastError  String?
+  nextAttemptAt DateTime?
+  createdAt  DateTime @default(now())
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  @@index([status, nextAttemptAt])
+}
+
+model Integration {
+  id        String   @id @default(cuid())
+  orgId     String
+  provider  String   @db.VarChar(64)
+  config    Json?
+  credentialsEnc String? @db.Text
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  @@unique([orgId, provider])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  orgId     String
+  userId    String?
+  type      String   @db.VarChar(64)
+  title     String
+  body      String?  @db.Text
+  readAt    DateTime?
+  dedupeKey String?  @unique
+  createdAt DateTime @default(now())
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  @@index([orgId, userId, readAt])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  orgId     String?
+  actorId   String?
+  action    String   @db.VarChar(96)
+  targetType String? @db.VarChar(64)
+  targetId  String?
+  metadata  Json?
+  ip        String?
+  createdAt DateTime @default(now())
+  org Organization? @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  @@index([orgId, createdAt])
+}
+
+// Per-caller conversation memory with an expiry (retention is configurable per org/agent).
+model ConversationMemory {
+  id        String   @id @default(cuid())
+  orgId     String
+  agentId   String
+  contactHash String @db.VarChar(64)
+  summary   String   @db.Text
+  expiresAt DateTime
+  updatedAt DateTime @updatedAt
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  @@unique([orgId, agentId, contactHash])
+  @@index([expiresAt])
+}
