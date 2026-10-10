@@ -7,8 +7,8 @@ export const DEFAULT_THRESHOLD = 0.35;
 export const NO_ANSWER = 'NO_RELEVANT_KNOWLEDGE';
 
 // Tenant- and agent-scoped retrieval. Returns citations and an explicit no-answer signal.
-export async function retrieve({ orgId, agentId, query, topK = 4, threshold = DEFAULT_THRESHOLD, usageKey }) {
-  const links = await prisma.agentKnowledgeBase.findMany({ where: { agentId, kb: { orgId } }, select: { knowledgeBaseId: true } }); // join through org: foreign ids are dropped
+export async function retrieve({ orgId, agentId, query, topK = 4, threshold = DEFAULT_THRESHOLD, usageKey, knowledgeBaseId }) {
+  const links = await prisma.agentKnowledgeBase.findMany({ where: { agentId, ...(knowledgeBaseId ? { knowledgeBaseId } : {}), kb: { orgId } }, select: { knowledgeBaseId: true } }); // join through org: foreign ids are dropped
   const knowledgeBaseIds = links.map((l) => l.knowledgeBaseId);
   if (!knowledgeBaseIds.length) return { answerable: false, reason: 'NO_KNOWLEDGE_BASE', chunks: [] };
   const { vectors, tokens } = await embedTexts([query]);
@@ -24,10 +24,10 @@ export function buildContext(result) {
 }
 
 // Retrieval evaluation: fraction of labelled queries whose expected document appears in the top-k.
-export async function evaluateRetrieval({ orgId, agentId, cases, topK = 4 }) {
+export async function evaluateRetrieval({ orgId, agentId, cases, topK = 4, knowledgeBaseId }) {
   let hit = 0; const details = [];
   for (const c of cases) {
-    const r = await retrieve({ orgId, agentId, query: c.query, topK });
+    const r = await retrieve({ orgId, agentId, query: c.query, topK, knowledgeBaseId });
     const ok = r.chunks.some((x) => x.citation.documentId === c.expectedDocumentId);
     if (ok) hit++; details.push({ query: c.query, ok });
   }

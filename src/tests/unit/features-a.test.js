@@ -60,8 +60,8 @@ describe('document ingestion pipeline', () => {
 });
 
 describe('post-call analysis', () => {
-  const call = { id: 'c1', orgId: 'o1', agentId: 'a1', direction: 'INBOUND', fromNumber: '+14155550100', agentVersion: { config: { extraction: [{ name: 'budget' }], retentionDays: 30 } }, transcript: [{ speaker: 'customer', text: 'my email is bob@x.com, I need a quote' }] };
-  beforeEach(() => { prismaMock.call.findUnique.mockResolvedValue(call); prismaMock.call.update.mockResolvedValue({}); prismaMock.usageEvent.create.mockResolvedValue({}); prismaMock.conversationMemory.findUnique.mockResolvedValue(null); prismaMock.conversationMemory.upsert.mockResolvedValue({}); });
+  const call = { id: 'c1', orgId: 'o1', agentId: 'a1', agentVersionId: 'v1', direction: 'INBOUND', fromNumber: '+14155550100', transcript: [{ speaker: 'customer', text: 'my email is bob@x.com, I need a quote' }] };
+  beforeEach(() => { prismaMock.agentVersion.findUnique.mockResolvedValue({ config: { extraction: [{ name: 'budget' }], retentionDays: 30 } }); prismaMock.call.findUnique.mockResolvedValue(call); prismaMock.call.update.mockResolvedValue({}); prismaMock.usageEvent.create.mockResolvedValue({}); prismaMock.conversationMemory.findUnique.mockResolvedValue(null); prismaMock.conversationMemory.upsert.mockResolvedValue({}); });
   it('redacts PII before the LLM, validates output, stores it, remembers the caller, records tokens', async () => {
     chatJson.mockResolvedValue({ content: JSON.stringify({ summary: 'Caller wants a quote', outcome: 'follow_up_needed', customerIntent: 'quote', qualityScore: 8, leadQualification: 'warm', extracted: { budget: 500 } }), tokens: 321 });
     const a = await analyzeCall('c1');
@@ -69,6 +69,7 @@ describe('post-call analysis', () => {
     expect(a.extracted.budget).toBe(500);
     expect(prismaMock.call.update).toHaveBeenCalledWith({ where: { id: 'c1' }, data: expect.objectContaining({ summary: 'Caller wants a quote' }) });
     expect(prismaMock.conversationMemory.upsert).toHaveBeenCalled();
+    expect(chatJson.mock.calls[0][0].system).toContain('budget'); // extraction fields come from the agent version, loaded separately
     expect(prismaMock.usageEvent.create.mock.calls[0][0].data).toMatchObject({ metric: 'LLM_TOKENS', quantity: 321n, idempotencyKey: 'call:c1:llm' });
   });
   it('throws on malformed model output (job retries) and stores nothing', async () => {

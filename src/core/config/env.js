@@ -28,6 +28,7 @@ const schema = z.object({
   QDRANT_API_KEY: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_API_URL: z.string().url().optional(), // test only: point the SDK at stripe-mock
   S3_ENDPOINT: z.string().optional(),
   S3_BUCKET: z.string().optional(),
   S3_ACCESS_KEY_ID: z.string().optional(),

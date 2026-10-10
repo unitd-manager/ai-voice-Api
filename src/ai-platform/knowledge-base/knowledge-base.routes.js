@@ -56,13 +56,15 @@ knowledgeBaseRouter.delete('/:kbId/documents/:docId', validate({ params: docP })
   await prisma.knowledgeDocument.delete({ where: { id: d.id } }); ok(res, {});
 }));
 knowledgeBaseRouter.post('/:kbId/search-test', validate({ params: kbP, body: z.object({ agentId: z.string().max(40), query: z.string().min(1).max(500) }) }), guard('kb:read'), h(async (req, res) => {
+  await ownKb(req.org.id, req.params.kbId); // the KB in the URL must belong to this org, and scopes the search
   const agent = await prisma.agent.findFirst({ where: { id: req.body.agentId, orgId: req.org.id } });
   if (!agent) throw AppError.notFound('Agent not found');
-  ok(res, await retrieve({ orgId: req.org.id, agentId: agent.id, query: req.body.query }));
+  ok(res, await retrieve({ orgId: req.org.id, agentId: agent.id, query: req.body.query, knowledgeBaseId: req.params.kbId }));
 }));
 
 knowledgeBaseRouter.post('/:kbId/evaluate', validate({ params: kbP, body: z.object({ agentId: z.string().max(40), topK: z.number().int().min(1).max(10).default(4), cases: z.array(z.object({ query: z.string().min(1).max(500), expectedDocumentId: z.string().max(40) })).min(1).max(50) }) }), guard('kb:read'), h(async (req, res) => {
+  await ownKb(req.org.id, req.params.kbId);
   const agent = await prisma.agent.findFirst({ where: { id: req.body.agentId, orgId: req.org.id } });
   if (!agent) throw AppError.notFound('Agent not found');
-  ok(res, await evaluateRetrieval({ orgId: req.org.id, agentId: agent.id, cases: req.body.cases, topK: req.body.topK }));
+  ok(res, await evaluateRetrieval({ orgId: req.org.id, agentId: agent.id, cases: req.body.cases, topK: req.body.topK, knowledgeBaseId: req.params.kbId }));
 }));

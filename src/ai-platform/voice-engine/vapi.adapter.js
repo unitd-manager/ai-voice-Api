@@ -20,7 +20,7 @@ export function toVapiAssistant({ name, config, agentId, functions = [], server,
     maxDurationSeconds: config.maxCallDurationSeconds,
     silenceTimeoutSeconds: config.silenceTimeoutSeconds,
     metadata: { agentId },
-    ...(server ? { server } : {}),
+    ...(server ? { server, serverMessages: ['status-update', 'end-of-call-report', 'tool-calls', 'transfer-destination-request'] } : {}),
   };
 }
 
